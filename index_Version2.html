@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <title>Egyszerű Szerszámraktár</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; }
+    form, input, button { margin: .5em 0; }
+    ul { list-style: none; padding: 0; }
+    li { margin-bottom: .5em; }
+    button { margin-left: .5em; }
+  </style>
+</head>
+<body>
+  <h1>Szerszámraktár</h1>
+  <form id="addForm">
+    <input type="text" id="name" placeholder="Szerszám neve" required>
+    <input type="text" id="type" placeholder="Típus" required>
+    <input type="number" id="quantity" placeholder="Darabszám" min="1" required>
+    <button type="submit">Hozzáadás</button>
+  </form>
+  <input type="text" id="search" placeholder="Keresés név vagy típus szerint">
+  <ul id="toolsList"></ul>
+
+  <script>
+    let tools = JSON.parse(localStorage.getItem("tools") || "[]");
+
+    function saveTools() {
+      localStorage.setItem("tools", JSON.stringify(tools));
+    }
+
+    function renderTools(filter = "") {
+      const list = document.getElementById("toolsList");
+      list.innerHTML = "";
+      tools
+        .filter(t =>
+          t.name.toLowerCase().includes(filter.toLowerCase()) ||
+          t.type.toLowerCase().includes(filter.toLowerCase())
+        )
+        .forEach((tool, idx) => {
+          const li = document.createElement("li");
+          li.textContent = `${tool.name} (${tool.type}) - ${tool.quantity} db`;
+          const delBtn = document.createElement("button");
+          delBtn.textContent = "Törlés";
+          delBtn.onclick = () => {
+            tools.splice(idx, 1);
+            saveTools();
+            renderTools(document.getElementById("search").value);
+          };
+          li.appendChild(delBtn);
+          list.appendChild(li);
+        });
+    }
+
+    document.getElementById("addForm").onsubmit = e => {
+      e.preventDefault();
+      const name = document.getElementById("name").value;
+      const type = document.getElementById("type").value;
+      const quantity = parseInt(document.getElementById("quantity").value, 10);
+      tools.push({ name, type, quantity });
+      saveTools();
+      e.target.reset();
+      renderTools(document.getElementById("search").value);
+    };
+
+    document.getElementById("search").oninput = e => {
+      renderTools(e.target.value);
+    };
+
+    renderTools();
+  </script>
+</body>
+</html>
